@@ -1,8 +1,3 @@
-provider "aws" {
-  region = "us-east-1"
-}
-
-# IAM Role for EC2 to access Kinesis
 resource "aws_iam_role" "ec2_kinesis_role" {
   name = "ec2-kinesis-role"
 
@@ -45,59 +40,10 @@ resource "aws_iam_instance_profile" "ec2_instance_profile" {
   role = aws_iam_role.ec2_kinesis_role.name
 }
 
-# EC2 Instance
-resource "aws_instance" "iot_data_source" {
-  ami                    = "ami-0e449927258d45bc4" # Amazon Linux
-  instance_type          = "t2.micro"
-  iam_instance_profile   = aws_iam_instance_profile.ec2_instance_profile.name
-  associate_public_ip_address = true
+# ---------------------------
+# IAM Role and Policy for Lambda to read from Kinesis and write to DynamoDB
+# ---------------------------
 
-  user_data = <<-EOF
-              #!/bin/bash
-              sudo yum install python3-pip -y
-              sudo pip3 install boto3
-              EOF
-
-  tags = {
-    Name = "iot-data-source-ec2"
-  }
-
-  vpc_security_group_ids = [aws_security_group.allow_https_only.id]
-}
-
-# Security Group
-resource "aws_security_group" "allow_https_only" {
-  name = "allow-https-only"
-
-  egress {
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
-# Kinesis Stream
-resource "aws_kinesis_stream" "data_ingestion_stream" {
-  name             = "data-ingestion-kinesis"
-  shard_count      = 1
-  retention_period = 24
-}
-
-# DynamoDB Table
-resource "aws_dynamodb_table" "data_storage" {
-  name         = "data-storage-dynamodb"
-  billing_mode = "PAY_PER_REQUEST"
-
-  attribute {
-    name = "entry_id"
-    type = "N"
-  }
-
-  hash_key = "entry_id"
-}
-
-# IAM Role for Lambda (Kinesis + DynamoDB)
 resource "aws_iam_role" "lambda_role" {
   name = "LambdaKinesisDynamoDBAccess"
 
@@ -148,29 +94,4 @@ resource "aws_iam_role_policy" "lambda_policy" {
       }
     ]
   })
-}
-
-# Lambda Function
-resource "aws_lambda_function" "data_processing_lambda" {
-  function_name = "data-processing-lambda"
-
-  filename         = "lambda_function_payload.zip"
-  handler          = "lambda_function.lambda_handler"
-  runtime          = "python3.9"
-  role             = aws_iam_role.lambda_role.arn
-
-  environment {
-    variables = {
-      DYNAMODB_TABLE = aws_dynamodb_table.data_storage.name
-    }
-  }
-}
-
-# Lambda Trigger (Kinesis → Lambda)
-resource "aws_lambda_event_source_mapping" "kinesis_trigger" {
-  event_source_arn  = aws_kinesis_stream.data_ingestion_stream.arn
-  function_name     = aws_lambda_function.data_processing_lambda.arn
-  starting_position = "LATEST"
-  batch_size        = 100
-  maximum_batching_window_in_seconds = 1
 }
