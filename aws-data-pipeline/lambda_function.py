@@ -5,8 +5,6 @@ This Lambda function processes records from an AWS Kinesis Data Stream,
 remaps ThingSpeak-style fields to human-readable field names,
 adds timestamps, and inserts the cleaned data into a DynamoDB table.
 
-Author: Your Name
-Date: 2025-04-30
 """
 
 import json

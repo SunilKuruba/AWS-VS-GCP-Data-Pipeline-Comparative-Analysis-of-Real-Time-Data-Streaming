@@ -17,7 +17,7 @@ from typing import List, Dict
 # Configuration
 THINGSPEAK_URL = "https://api.thingspeak.com/channels/12397/feeds.json?results=100"
 STREAM_NAME = "data-ingestion-kinesis"
-REGION_NAME = "us-east-2"
+REGION_NAME = "us-east-1"
 FETCH_INTERVAL_SECONDS = 60
 kinesis_client = boto3.client("kinesis", region_name=REGION_NAME)
 
