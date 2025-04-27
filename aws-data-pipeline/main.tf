@@ -3,22 +3,35 @@ provider "aws" {
 }
 
 # IAM Role for EC2 to access Kinesis
+resource "aws_iam_role" "ec2_kinesis_role" {
+  name = "ec2-kinesis-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Effect = "Allow",
+      Principal = {
+        Service = "ec2.amazonaws.com"
+      },
+      Action = "sts:AssumeRole"
+    }]
+  })
+}
+
 resource "aws_iam_policy" "ec2_kinesis_write_policy" {
   name = "EC2KinesisWritePolicy"
 
   policy = jsonencode({
     Version = "2012-10-17",
-    Statement = [
-      {
-        Effect = "Allow",
-        Action = [
-          "kinesis:PutRecord",
-          "kinesis:PutRecords",
-          "kinesis:DescribeStream"
-        ],
-        Resource = aws_kinesis_stream.data_ingestion_stream.arn
-      }
-    ]
+    Statement = [{
+      Effect = "Allow",
+      Action = [
+        "kinesis:PutRecord",
+        "kinesis:PutRecords",
+        "kinesis:DescribeStream"
+      ],
+      Resource = aws_kinesis_stream.data_ingestion_stream.arn
+    }]
   })
 }
 
@@ -27,9 +40,14 @@ resource "aws_iam_role_policy_attachment" "ec2_kinesis_policy_attach" {
   policy_arn = aws_iam_policy.ec2_kinesis_write_policy.arn
 }
 
+resource "aws_iam_instance_profile" "ec2_instance_profile" {
+  name = "ec2-kinesis-instance-profile"
+  role = aws_iam_role.ec2_kinesis_role.name
+}
+
 # EC2 Instance
 resource "aws_instance" "iot_data_source" {
-  ami                    = "ami-060a84cbcb5c14844" # Amazon Linux
+  ami                    = "ami-04505e74c0741db8d" # Amazon Linux
   instance_type          = "t2.micro"
   iam_instance_profile   = aws_iam_instance_profile.ec2_instance_profile.name
   associate_public_ip_address = true
@@ -38,19 +56,18 @@ resource "aws_instance" "iot_data_source" {
               #!/bin/bash
               sudo yum install python3-pip -y
               sudo pip3 install boto3
-              cd /home/ec2-user/
-              python3 data_source.py
               EOF
 
   tags = {
     Name = "iot-data-source-ec2"
   }
 
-  vpc_security_group_ids = [aws_security_group.allow_all.id]
+  vpc_security_group_ids = [aws_security_group.allow_https_only.id]
 }
 
+# Security Group
 resource "aws_security_group" "allow_https_only" {
-  name = "allow_https_only"
+  name = "allow-https-only"
 
   egress {
     from_port   = 443
@@ -58,11 +75,6 @@ resource "aws_security_group" "allow_https_only" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-}
-
-resource "aws_iam_instance_profile" "ec2_instance_profile" {
-  name = "ec2-kinesis-instance-profile"
-  role = aws_iam_role.ec2_kinesis_role.name
 }
 
 # Kinesis Stream
@@ -79,7 +91,7 @@ resource "aws_dynamodb_table" "data_storage" {
 
   attribute {
     name = "entry_id"
-    type = "N" # Number
+    type = "N"
   }
 
   hash_key = "entry_id"
@@ -142,10 +154,9 @@ resource "aws_iam_role_policy" "lambda_policy" {
 resource "aws_lambda_function" "data_processing_lambda" {
   function_name = "data-processing-lambda"
 
-  filename         = "lambda_function_payload.zip" # <-- You need to create a deployment package (.zip)
+  filename         = "lambda_function_payload.zip"
   handler          = "lambda_function.lambda_handler"
   runtime          = "python3.9"
-  reserved_concurrent_executions = 1
   role             = aws_iam_role.lambda_role.arn
 
   environment {
@@ -155,7 +166,7 @@ resource "aws_lambda_function" "data_processing_lambda" {
   }
 }
 
-# Lambda Trigger (Kinesis)
+# Lambda Trigger (Kinesis → Lambda)
 resource "aws_lambda_event_source_mapping" "kinesis_trigger" {
   event_source_arn  = aws_kinesis_stream.data_ingestion_stream.arn
   function_name     = aws_lambda_function.data_processing_lambda.arn
