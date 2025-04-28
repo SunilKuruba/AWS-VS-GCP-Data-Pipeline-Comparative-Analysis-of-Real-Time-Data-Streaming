@@ -1,33 +1,33 @@
+/* 
+
 resource "google_managed_kafka_cluster" "kafka" {
-  provider    = google-beta
-  name        = var.cluster_id
-  location    = var.region
+  provider   = google-beta
+  cluster_id = var.cluster_id 
+  location   = var.region 
+
+  capacity_config {
+    vcpu_count   = 4
+    memory_bytes = 8589934592
+  }
+
 
   gcp_config {
-    project = var.project_id
-    network = var.subnet_self_link
-  }
-
-  capacity {
-    vcpu_count   = 2
-    memory_bytes = 4294967296  # 4 GB
-  }
-
-  kafka_config {
-    version = "3.7.2" # or whatever version you want
-  }
-
-  billing_config {
-    billing_mode = "PAY_AS_YOU_GO"
+    access_config {
+      network_configs {
+        subnet = var.subnet_self_link 
+      }
+    }
   }
 }
 
 resource "google_managed_kafka_topic" "iot_topic" {
-  provider             = google-beta
-  name                 = var.kafka_topic
-  cluster              = google_managed_kafka_cluster.kafka.name
-  location             = var.region
-  topic_id             = var.kafka_topic
-  partition_count      = 1
-  replication_factor   = 1
+  provider           = google-beta
+  cluster            = google_managed_kafka_cluster.kafka.cluster_id
+  location           = var.region
+
+  topic_id           = var.kafka_topic
+  partition_count    = 1
+  replication_factor = 3
 }
+
+*/

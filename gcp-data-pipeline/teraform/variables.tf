@@ -27,12 +27,12 @@ variable "subnet_self_link" {
 
 variable "cluster_id" {
   type    = string
-  default = "data-ingestion-1"
+  default = "data-ingestion"
 }
 
 variable "bootstrap_server" {
   type = string
-  default = "bootstrap.data-ingestion-1.us-central1.managedkafka.cool-continuity-457614-b2.cloud.goog:9092"
+  default = "bootstrap.data-ingestion.us-central1.managedkafka.cool-continuity-457614-b2.cloud.goog:9092"
 }
 
 variable "kafka_topic" {

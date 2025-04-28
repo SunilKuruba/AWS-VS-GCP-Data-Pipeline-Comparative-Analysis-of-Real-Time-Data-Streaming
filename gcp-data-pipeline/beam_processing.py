@@ -6,7 +6,8 @@ from tokenprovider import TokenProvider
 from google.cloud import bigtable
 from google.cloud.bigtable import row
 from apache_beam.utils.timestamp import MAX_TIMESTAMP, MIN_TIMESTAMP
-import time, datetime, json, argparse
+import time, json, argparse
+from datetime import datetime, timezone
 
 parser = argparse.ArgumentParser()
 bootstrap_default = 'bootstrap.data-ingestion.us-central1.managedkafka.cool-continuity-457614-b2.cloud.goog:9092'
@@ -14,22 +15,27 @@ parser.add_argument('-b', '--bootstrap-servers', dest='bootstrap', type=str,  de
 parser.add_argument('-t', '--topic-name', dest='topic_name', type=str, default='iot-data', required=False)
 parser.add_argument('-n', '--num_messages', dest='num_messages', type=int, default=2, required=False)
 parser.add_argument('-project_id', '--project_id', dest='project_id', type=str, default='cool-continuity-457614-b2', required=False)
-parser.add_argument('-instance_id','--instance_id',  dest='instance_id', type=str, default='iot-data-store-1', required=False)
+parser.add_argument('-instance_id','--instance_id',  dest='instance_id', type=str, default='iot-data-store', required=False)
 parser.add_argument('-table_id', '--table_id',  dest='table_id', type=str, default='weather-info', required=False)
 args = parser.parse_args()
 
+# For processing the records
+field_mapping =  {
+    "field1": "wind_direction",
+    "field2": "wind_speed",
+    "field3": "humidity_percent",
+    "field4": "temperature_fahrenheit",
+    "field5": "rain_inches_per_minute",
+    "field6": "pressure_inhg",
+    "field7": "power_level_volts",
+    "field8": "light_intensity"
+}
+
 def run():
-    # Setup logging
-    logging.basicConfig(level=logging.INFO)
-    logger = logging.getLogger(__name__)
-    
-    # Create a unique group ID
+    # Group ID for consuming from kafka
     group_id = "beam-test-group"
-    logger.info(f"Using consumer group ID: {group_id}")
+    print(f"Using consumer group ID: {group_id}")
     
-    # Get the required OAuth token
-    # We're creating the token provider here but not using it directly in the pipeline
-    # This avoids serialization issues
     token_provider = TokenProvider()
     
     # Set up pipeline options
@@ -53,13 +59,13 @@ def run():
                 token_provider_class=TokenProvider
             ))
             | 'LogMessages' >> beam.Map(
-                lambda msg: (logger.info(f"Received message: {msg}") or msg)
+                lambda msg: (print(f"Received message: {msg}") or msg)
             )
-            | 'WriteToBigtable' >> beam.ParDo(WriteToBigtable(
-                project_id=args.project_id,
-                instance_id=args.instance_id,
-                table_id=args.table_id
-            ))
+            # | 'WriteToBigtable' >> beam.ParDo(WriteToBigtable(
+            #     project_id=args.project_id,
+            #     instance_id=args.instance_id,
+            #     table_id=args.table_id
+            # ))
         )
 
 # Custom DoFn for Kafka reading
@@ -101,8 +107,8 @@ class ReadKafkaMessages(beam.DoFn):
         try:
             while True:
                 msg = self.consumer.poll(timeout=25.0)
-                
                 print(msg)
+                break
 
                 if msg is None:
                     self.logger.info("No message received, continuing...")
@@ -117,10 +123,29 @@ class ReadKafkaMessages(beam.DoFn):
                     # Process the message
                     key = msg.key().decode('utf-8') if msg.key() else None
                     value = msg.value().decode('utf-8')
+                    formatted_data =  self.process_helper(json.loads(value), msg.timestamp()[1])
+                    
                     self.consumer.commit(asynchronous=False)
-                    yield value
+
+                    yield formatted_data
         except Exception as e:
             self.logger.error(f"Error processing Kafka messages: {e}")
+
+    def process_helper(self, records, kafka_timestamp):
+        formatted_data = {} 
+
+        for (field, value) in records.items():
+            key = field_mapping.get(field, field)
+            formatted_data[key] = value
+        
+        # adding kafka and beam time stamps
+        dt = datetime.fromtimestamp(kafka_timestamp / 1000, tz=timezone.utc)
+        formatted_data['kafka_timestamp'] = dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+        current_time = time.gmtime()
+        formatted_time = time.strftime("%Y-%m-%dT%H:%M:%SZ", current_time)
+        formatted_data['beam_timestamp'] = formatted_time
+
+        return formatted_data
     
     def teardown(self):
         if hasattr(self, 'consumer'):

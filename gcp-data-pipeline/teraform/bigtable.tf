@@ -15,6 +15,7 @@ resource "google_bigtable_instance" "bt_instance" {
 
 resource "google_bigtable_table" "bt_table" {
   name          = var.bt_table_id
+  deletion_protection = false
   instance_name = google_bigtable_instance.bt_instance.name
 
   column_family {
