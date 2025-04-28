@@ -57,23 +57,24 @@ feeds_data = resp['feeds']
 
 formatted_data = {}
 
-for feed in feeds_data:
-    uid = uuid.uuid1()
-    key = f"key-{uid}".encode('utf-8')
+while True:
+    for feed in feeds_data:
+        uid = uuid.uuid1()
+        key = f"key-{uid}".encode('utf-8')
 
-    for (key, val) in feed.items():
-        new_key = field_map.get(key, key)
-        formatted_data[new_key] = val
-    
-    current_time = time.gmtime()
-    formatted_time = time.strftime("%Y-%m-%dT%H:%M:%SZ", current_time)
-    formatted_data['kafka_time'] = formatted_time
-    
-    value = json.dumps(formatted_data).encode('utf-8')
-    producer.produce(args.topic_name, key=key, value=value, callback=callBack)
-    producer.poll(0)  # Internal queue handling
-    if args.delay > 0:
-        time.sleep(args.delay)  # Pause between messages
+        for (key, val) in feed.items():
+            new_key = field_map.get(key, key)
+            formatted_data[new_key] = val
+        
+        current_time = time.gmtime()
+        formatted_time = time.strftime("%Y-%m-%dT%H:%M:%SZ", current_time)
+        formatted_data['kafka_time'] = formatted_time
+        
+        value = json.dumps(formatted_data).encode('utf-8')
+        producer.produce(args.topic_name, key=key, value=value, callback=callBack)
+        producer.poll(0)  # Internal queue handling
+        if args.delay > 0:
+            time.sleep(args.delay)  # Pause between messages
 
-producer.flush()
-print(f"Successfully produced {args.num_messages} messages to topic '{args.topic_name}' with {args.delay} sec delay between each.")
+    producer.flush()
+    print(f"Successfully produced {args.num_messages} messages to topic '{args.topic_name}' with {args.delay} sec delay between each.")

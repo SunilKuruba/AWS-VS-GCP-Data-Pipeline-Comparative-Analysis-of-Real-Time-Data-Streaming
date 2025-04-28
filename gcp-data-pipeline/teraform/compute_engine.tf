@@ -44,8 +44,8 @@ resource "google_compute_instance" "vm" {
     nohup /opt/venv/bin/python data_ingestion.py \
       --bootstrap-servers=${var.bootstrap_server} \
       --topic-name=${var.kafka_topic} \
-      --num_messages=100 \
-      --delay=0.2 >/var/log/publisher.log 2>&1 &
+      --num_messages=2 \
+      --delay=5 >/var/log/publisher.log 2>&1 &
 
     # Launch beam_processing.py
     nohup /opt/venv/bin/python beam_processing.py >/var/log/beam.log 2>&1 &
