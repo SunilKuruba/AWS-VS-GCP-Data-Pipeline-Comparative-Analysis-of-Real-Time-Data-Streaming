@@ -1,4 +1,4 @@
-resource "google_bigtable_instance" "iot" {
+/* resource "google_bigtable_instance" "iot" {
   name          = var.bigtable_instance_id
   instance_type = "PRODUCTION"
   cluster {
@@ -16,3 +16,4 @@ resource "google_bigtable_table" "weather" {
     family = "cf1"
   }
 }
+*/
