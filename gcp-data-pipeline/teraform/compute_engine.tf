@@ -1,24 +1,25 @@
 resource "google_compute_instance" "vm" {
-    name         = var.vm_name
-    machine_type = var.machine_type
-    zone         = var.zone
-    tags         = ["kafka-beam"]
+  name         = var.vm_name
+  machine_type = var.machine_type
+  zone         = var.zone
 
-    boot_disk {
-        initialize_params { image = "projects/debian-cloud/global/images/debian-12-bookworm-v20240415" }
+  boot_disk {
+    initialize_params {
+      image = "projects/debian-cloud/global/images/debian-12-bookworm-v20240415"
     }
+  }
 
-    network_interface {
-        subnetwork    = var.subnet_self_link
-        access_config {}                 # comment out to make the VM private-only
-    }
+  network_interface {
+    subnetwork    = var.subnet_self_link
+    access_config {}
+  }
 
-    service_account {
-        email  = google_service_account.sa.email
-        scopes = ["https://www.googleapis.com/auth/cloud-platform"]
-    }
+  service_account {
+    email  = "default"
+    scopes = ["https://www.googleapis.com/auth/cloud-platform"]
+  }
 
-    metadata_startup_script = <<-EOT
+  metadata_startup_script = <<-EOF
     #!/bin/bash
     set -eux
 
@@ -30,19 +31,21 @@ resource "google_compute_instance" "vm" {
     /opt/venv/bin/pip install --upgrade pip
     /opt/venv/bin/pip install confluent_kafka apache-beam[gcp] google-cloud-bigtable google-auth urllib3
 
-    # Clone your Git repo
-    cd /opt
+    mkdir -p /opt/pipeline
+    cd /opt/pipeline
+
+    # Clone your repository
     git clone https://github.com/SunilKuruba/aws-vs-gcp-data-pipeline.git
     cd aws-vs-gcp-data-pipeline/gcp-data-pipeline
 
-    # Launch publisher.py and beam_processing.py
+    # Launch publisher.py
     nohup /opt/venv/bin/python publisher.py \
-        --bootstrap-servers=${var.bootstrap_server} \
-        --topic-name=${var.kafka_topic} \
-        --num_messages=100 \
-        --delay=0.2 >/var/log/publisher.log 2>&1 &
+      --bootstrap-servers=${var.bootstrap_server} \
+      --topic-name=${var.kafka_topic} \
+      --num_messages=100 \
+      --delay=0.2 >/var/log/publisher.log 2>&1 &
 
+    # Launch beam_processing.py
     nohup /opt/venv/bin/python beam_processing.py >/var/log/beam.log 2>&1 &
-
-    EOT
+  EOF
 }
