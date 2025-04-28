@@ -10,8 +10,8 @@ parser = argparse.ArgumentParser()
 bootstrap_default = 'bootstrap.data-ingestion.us-central1.managedkafka.cool-continuity-457614-b2.cloud.goog:9092'
 parser.add_argument('-b', '--bootstrap-servers', dest='bootstrap', type=str,  default=bootstrap_default, required=False)
 parser.add_argument('-t', '--topic-name', dest='topic_name', type=str, default='iot-data', required=False)
-parser.add_argument('-n', '--num_messages', dest='num_messages', type=int, default=10, required=False)
-parser.add_argument('--delay', dest='delay', type=float, default=0.0, required=False)
+parser.add_argument('-n', '--num_messages', dest='num_messages', type=int, default=2, required=False)
+parser.add_argument('--delay', dest='delay', type=float, default=5.0, required=False)
 args = parser.parse_args()
 
 

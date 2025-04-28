@@ -96,7 +96,7 @@ class ReadKafkaMessages(beam.DoFn):
 
                 if msg is None:
                     self.logger.info("No message received, continuing...")
-                    break
+                    continue
                 
                 if msg.error():
                     if msg.error().code() == KafkaError._PARTITION_EOF:

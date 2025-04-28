@@ -15,6 +15,7 @@ variable "zone" {
 
 variable "subnet_self_link" {
   type = string
+  default = "projects/cool-continuity-457614-b2/regions/us-central1/subnetworks/default"
 }
 
 variable "vm_name" {
@@ -30,6 +31,7 @@ variable "machine_type" {
 # Bigtable
 variable "bootstrap_server" {
   type = string
+  default = "bootstrap.data-ingestion.us-central1.managedkafka.cool-continuity-457614-b2.cloud.goog:9092"
 }
 
 variable "kafka_topic" {

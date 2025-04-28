@@ -40,7 +40,7 @@ resource "google_project_iam_member" "compute_sa_managedkafka" {
   member  = "serviceAccount:${var.project_number}-compute@developer.gserviceaccount.com"
 }
 
-*/ 
+
 
 terraform {
   required_version = ">= 1.6"
@@ -54,3 +54,5 @@ provider "google" {
   region  = var.region
   zone    = var.zone
 }
+
+*/

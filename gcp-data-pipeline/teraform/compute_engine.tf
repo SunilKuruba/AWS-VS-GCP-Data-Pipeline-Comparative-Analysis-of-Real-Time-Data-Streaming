@@ -36,10 +36,12 @@ resource "google_compute_instance" "vm" {
 
     # Clone your repository
     git clone https://github.com/SunilKuruba/aws-vs-gcp-data-pipeline.git
-    cd aws-vs-gcp-data-pipeline/gcp-data-pipeline
+    cd aws-vs-gcp-data-pipeline
+    git checkout gcp
+    cd gcp-data-pipeline
 
     # Launch publisher.py
-    nohup /opt/venv/bin/python publisher.py \
+    nohup /opt/venv/bin/python data_ingestion.py \
       --bootstrap-servers=${var.bootstrap_server} \
       --topic-name=${var.kafka_topic} \
       --num_messages=100 \
