@@ -1,19 +1,23 @@
-/* resource "google_bigtable_instance" "iot" {
-  name          = var.bigtable_instance_id
-  instance_type = "PRODUCTION"
+resource "google_bigtable_instance" "bt_instance" {
+  name          = var.bt_instance_id
+
   cluster {
-    cluster_id   = "${var.bigtable_instance_id}-c"
+    cluster_id   = "${var.bt_instance_id}-cluster"
     zone         = var.zone
     num_nodes    = 1
     storage_type = "HDD"
   }
+
+  labels = {
+    environment = "prod"
+  }
 }
 
-resource "google_bigtable_table" "weather" {
-  instance_name = google_bigtable_instance.iot.name
-  name          = var.bigtable_table_id
+resource "google_bigtable_table" "bt_table" {
+  name          = var.bt_table_id
+  instance_name = google_bigtable_instance.bt_instance.name
+
   column_family {
     family = "cf1"
   }
 }
-*/

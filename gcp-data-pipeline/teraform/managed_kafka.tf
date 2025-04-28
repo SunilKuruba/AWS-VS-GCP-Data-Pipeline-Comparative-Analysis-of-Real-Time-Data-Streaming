@@ -1,26 +1,33 @@
-# Uncomment to create.  If the cluster already exists, run `terraform import`.
-/*
 resource "google_managed_kafka_cluster" "kafka" {
-  provider        = google-beta
-  cluster_id      = var.cluster_id
-  location        = var.region               # regional cluster
-  encryption_key  = "google-managed"         # default CMEK
-  # Network section uses the subnet you passed in
-  network_config {
-    subnet = var.subnet_self_link
+  provider    = google-beta
+  name        = var.cluster_id
+  location    = var.region
+
+  gcp_config {
+    project = var.project_id
+    network = var.subnet_self_link
   }
-  capacity_config {
-    # Example: 3-node, 2 vCPU each
-    per_broker_cpu   = 2
-    per_broker_count = 3
+
+  capacity {
+    vcpu_count   = 2
+    memory_bytes = 4294967296  # 4 GB
+  }
+
+  kafka_config {
+    version = "3.7.2" # or whatever version you want
+  }
+
+  billing_config {
+    billing_mode = "PAY_AS_YOU_GO"
   }
 }
 
 resource "google_managed_kafka_topic" "iot_topic" {
-  provider    = google-beta
-  name        = var.topic_name
-  cluster_id  = google_managed_kafka_cluster.kafka.cluster_id
-  location    = var.region
-  partitions  = 6
+  provider             = google-beta
+  name                 = var.kafka_topic
+  cluster              = google_managed_kafka_cluster.kafka.name
+  location             = var.region
+  topic_id             = var.kafka_topic
+  partition_count      = 1
+  replication_factor   = 1
 }
-*/

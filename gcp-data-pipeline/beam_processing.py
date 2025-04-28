@@ -6,7 +6,17 @@ from tokenprovider import TokenProvider
 from google.cloud import bigtable
 from google.cloud.bigtable import row
 from apache_beam.utils.timestamp import MAX_TIMESTAMP, MIN_TIMESTAMP
-import time, datetime, json
+import time, datetime, json, argparse
+
+parser = argparse.ArgumentParser()
+bootstrap_default = 'bootstrap.data-ingestion.us-central1.managedkafka.cool-continuity-457614-b2.cloud.goog:9092'
+parser.add_argument('-b', '--bootstrap-servers', dest='bootstrap', type=str,  default=bootstrap_default, required=False)
+parser.add_argument('-t', '--topic-name', dest='topic_name', type=str, default='iot-data', required=False)
+parser.add_argument('-n', '--num_messages', dest='num_messages', type=int, default=2, required=False)
+parser.add_argument('-project_id', '--project_id', dest='project_id', type=str, default='cool-continuity-457614-b2', required=False)
+parser.add_argument('-instance_id','--instance_id',  dest='instance_id', type=str, default='iot-data-store-1', required=False)
+parser.add_argument('-table_id', '--table_id',  dest='table_id', type=str, default='weather-info', required=False)
+args = parser.parse_args()
 
 def run():
     # Setup logging
@@ -37,8 +47,8 @@ def run():
             pipeline
             | 'Create' >> beam.Create([1])
             | 'ReadFromKafka' >> beam.ParDo(ReadKafkaMessages(
-                bootstrap_servers='bootstrap.data-ingestion.us-central1.managedkafka.cool-continuity-457614-b2.cloud.goog:9092',
-                topic='iot-data',
+                bootstrap_servers=args.bootstrap,
+                topic=args.topic_name,
                 group_id=group_id,
                 token_provider_class=TokenProvider
             ))
@@ -46,9 +56,9 @@ def run():
                 lambda msg: (logger.info(f"Received message: {msg}") or msg)
             )
             | 'WriteToBigtable' >> beam.ParDo(WriteToBigtable(
-                project_id='cool-continuity-457614-b2',
-                instance_id='iot-data-store',
-                table_id='weather-info'
+                project_id=args.project_id,
+                instance_id=args.instance_id,
+                table_id=args.table_id
             ))
         )
 
@@ -136,7 +146,7 @@ class WriteToBigtable(beam.DoFn):
         if timestamp in (MAX_TIMESTAMP, MIN_TIMESTAMP):
             event_dt = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)
         else:
-            event_dt = timestamp.to_utc_datetime()          # already tz-aware
+            event_dt = timestamp.to_utc_datetime()   
 
         # ----- write the row --------------
         row_key = uuid.uuid4().bytes
@@ -146,7 +156,7 @@ class WriteToBigtable(beam.DoFn):
             self.column_family,
             b"message",
             element.encode(),
-            timestamp=event_dt          # <-- pass datetime, not int
+            timestamp=event_dt # Datatime
         )
         bt_row.commit()
 
