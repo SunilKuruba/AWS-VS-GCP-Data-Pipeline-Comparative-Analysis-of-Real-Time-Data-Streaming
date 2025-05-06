@@ -2,10 +2,10 @@
 
 This project implements a real-time data pipeline using AWS services to simulate and process IoT sensor data. The architecture consists of an EC2 instance for data generation, Amazon Kinesis for streaming ingestion, AWS Lambda for data transformation, and DynamoDB for scalable storage. The pipeline is fully automated using Terraform, enabling repeatable infrastructure setup and teardown. This setup is designed for benchmarking performance, cost, and sustainability in cloud-native stream processing.
 
-
+![AWS Data pipeline architecture design](image.png)
 # AWS Resources Summary
 
-This table outlines the AWS resources created in Terraform, organized by category in the following order: IAM → Security → EC2 → Kinesis → Lambda → DynamoDB.
+This table outlines the AWS resources created in Terraform.
 
 | **Category** | **Resource Type** | **Name** | **Key Specifications** |
 |--------------|-------------------|----------|--------------------------|
@@ -32,7 +32,6 @@ This table outlines the AWS resources created in Terraform, organized by categor
 - Ensure you're operating in the **`us-east-1`** region.
 - This pipeline is designed for `us-east-1`.
 
----
 
 ## Step 3: Create IAM Role for EC2
 
@@ -43,7 +42,6 @@ This table outlines the AWS resources created in Terraform, organized by categor
 5. Set the Role Name: `EC2-terraform-management`
 6. Complete role creation
 
----
 
 ## Step 4: Launch EC2 Instance
 
@@ -53,14 +51,12 @@ This table outlines the AWS resources created in Terraform, organized by categor
 - In **Advanced Settings**, attach the IAM Role: `EC2-terraform-management`
 - Launch the instance
 
----
 
 ## Step 5: Connect to EC2
 
 - Use **EC2 Instance Connect** from the AWS Console
 - This opens a web-based shell into your EC2
 
----
 
 ## Step 6: Set Up Required Dependencies
 
