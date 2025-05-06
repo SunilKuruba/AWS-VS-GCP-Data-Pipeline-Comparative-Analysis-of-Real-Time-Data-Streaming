@@ -77,7 +77,7 @@ class ReadKafkaMessages(beam.DoFn):
         self.token_provider_class = token_provider_class
     
     def setup(self):
-        # Import here to avoid serialization issues
+        # Importing here to avoid serialization issues
         from confluent_kafka import Consumer, KafkaError
         
         # Create token provider inside setup
@@ -103,7 +103,6 @@ class ReadKafkaMessages(beam.DoFn):
         self.logger.info(f"Kafka consumer set up for topic: {self.topic}")
     
     def process(self, element):
-        # Poll for messages
         try:
             while True:
                 msg = self.consumer.poll(timeout=25.0)
@@ -165,20 +164,16 @@ class WriteToBigtable(beam.DoFn):
         self.table_id = table_id
         self.column_family = column_family
 
-    # ---------- Beam lifecycle ----------
     def setup(self):
         self.client   = bigtable.Client(project=self.project_id, admin=True)
         self.instance = self.client.instance(self.instance_id)
         self.table    = self.instance.table(self.table_id)
 
     def process(self, element, timestamp=beam.DoFn.TimestampParam):
-        # ----- choose a safe datetime -----
         if timestamp in (MAX_TIMESTAMP, MIN_TIMESTAMP):
             event_dt = datetime.utcnow().replace(tzinfo=timezone.utc)
         else:
             event_dt = timestamp.to_utc_datetime()   
-
-        # ----- write the row --------------
         row_key = uuid.uuid4().bytes
         bt_row  = self.table.direct_row(row_key)
 
