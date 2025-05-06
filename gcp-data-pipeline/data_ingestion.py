@@ -56,7 +56,7 @@ while True:
 
         
         # Epoch millisecond
-        feed['vm_timestamp'] = int(time.time_ns())//1000
+        feed['vm_timestamp'] = int(time.time_ns())//1_000_000
         
         value = json.dumps(feed).encode('utf-8')
         producer.produce(args.topic_name, key=key, value=value, callback=callBack)
