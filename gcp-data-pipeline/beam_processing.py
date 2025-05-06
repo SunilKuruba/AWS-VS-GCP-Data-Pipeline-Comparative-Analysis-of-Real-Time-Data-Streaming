@@ -145,10 +145,10 @@ class ReadKafkaMessages(beam.DoFn):
         # formatted_data['beam_timestamp'] = formatted_time
 
         # a) from Kafka: msg.timestamp()[1] is **milliseconds since epoch**
-        formatted_data['kafka_timestamp'] = kafka_timestamp_ms // 1000
+        formatted_data['kafka_timestamp'] = kafka_timestamp_ms
 
         # b) “Beam produce time”: just take current clock in seconds
-        formatted_data['beam_timestamp'] = int(time.time())
+        formatted_data['beam_timestamp'] = int(time.time_ns())//1000
 
         return formatted_data
     

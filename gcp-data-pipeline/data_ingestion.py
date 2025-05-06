@@ -50,9 +50,13 @@ while True:
         uid = uuid.uuid1()
         key = f"key-{uid}".encode('utf-8')
         
-        current_time = time.gmtime()
-        formatted_time = time.strftime("%Y-%m-%dT%H:%M:%SZ", current_time)
-        feed['vm_timestamp'] = formatted_time
+        # current_time = time.gmtime()
+        # formatted_time = time.strftime("%Y-%m-%dT%H:%M:%SZ", current_time)
+        # feed['vm_timestamp'] = formatted_time
+
+        
+        # Epoch millisecond
+        feed['vm_timestamp'] = int(time.time_ns())//1000
         
         value = json.dumps(feed).encode('utf-8')
         producer.produce(args.topic_name, key=key, value=value, callback=callBack)
