@@ -1,5 +1,6 @@
 resource "google_bigtable_instance" "bt_instance" {
   name          = var.bt_instance_id
+  deletion_protection=false
 
   cluster {
     cluster_id   = "${var.bt_instance_id}-cluster"

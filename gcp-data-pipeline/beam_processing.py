@@ -61,11 +61,11 @@ def run():
             | 'LogMessages' >> beam.Map(
                 lambda msg: (print(f"Received message: {msg}") or msg)
             )
-            # | 'WriteToBigtable' >> beam.ParDo(WriteToBigtable(
-            #     project_id=args.project_id,
-            #     instance_id=args.instance_id,
-            #     table_id=args.table_id
-            # ))
+            | 'WriteToBigtable' >> beam.ParDo(WriteToBigtable(
+                project_id=args.project_id,
+                instance_id=args.instance_id,
+                table_id=args.table_id
+            ))
         )
 
 # Custom DoFn for Kafka reading
@@ -108,11 +108,10 @@ class ReadKafkaMessages(beam.DoFn):
             while True:
                 msg = self.consumer.poll(timeout=25.0)
                 print(msg)
-                break
 
                 if msg is None:
                     self.logger.info("No message received, continuing...")
-                    continue
+                    break
                 
                 if msg.error():
                     if msg.error().code() == KafkaError._PARTITION_EOF:

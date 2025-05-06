@@ -2,6 +2,7 @@ resource "google_compute_instance" "vm" {
   name         = var.vm_name
   machine_type = var.machine_type
   zone         = var.zone
+  deletion_protection = false
 
   boot_disk {
     initialize_params {
@@ -39,6 +40,12 @@ resource "google_compute_instance" "vm" {
     cd aws-vs-gcp-data-pipeline
     git checkout gcp
     cd gcp-data-pipeline
+
+    touch /var/log/publisher.log
+    sudo chmod 666 /var/log/publisher.log
+    touch /var/log/beam.log
+    sudo chmod 666 /var/log/beam.log
+
 
     # Launch publisher.py
     nohup /opt/venv/bin/python data_ingestion.py \
