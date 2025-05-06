@@ -55,7 +55,7 @@ variable "machine_type" {
 # Bigtable
 variable "bt_instance_id" {
   type    = string
-  default = "iot-data-store-1"
+  default = "iot-data-store"
 }
 
 variable "bt_table_id" {

@@ -130,7 +130,7 @@ class ReadKafkaMessages(beam.DoFn):
         except Exception as e:
             self.logger.error(f"Error processing Kafka messages: {e}")
 
-    def process_helper(self, records, kafka_timestamp):
+    def process_helper(self, records, kafka_timestamp_ms):
         formatted_data = {} 
 
         for (field, value) in records.items():
@@ -138,11 +138,17 @@ class ReadKafkaMessages(beam.DoFn):
             formatted_data[key] = value
         
         # adding kafka and beam time stamps
-        dt = datetime.fromtimestamp(kafka_timestamp / 1000, tz=timezone.utc)
-        formatted_data['kafka_timestamp'] = dt.strftime("%Y-%m-%dT%H:%M:%SZ")
-        current_time = time.gmtime()
-        formatted_time = time.strftime("%Y-%m-%dT%H:%M:%SZ", current_time)
-        formatted_data['beam_timestamp'] = formatted_time
+        # dt = datetime.fromtimestamp(kafka_timestamp_ms / 1000, tz=timezone.utc)
+        # formatted_data['kafka_timestamp'] = dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+        # current_time = time.gmtime()
+        # formatted_time = time.strftime("%Y-%m-%dT%H:%M:%SZ", current_time)
+        # formatted_data['beam_timestamp'] = formatted_time
+
+        # a) from Kafka: msg.timestamp()[1] is **milliseconds since epoch**
+        formatted_data['kafka_timestamp'] = kafka_timestamp_ms // 1000
+
+        # b) “Beam produce time”: just take current clock in seconds
+        formatted_data['beam_timestamp'] = int(time.time())
 
         return formatted_data
     
@@ -168,7 +174,7 @@ class WriteToBigtable(beam.DoFn):
     def process(self, element, timestamp=beam.DoFn.TimestampParam):
         # ----- choose a safe datetime -----
         if timestamp in (MAX_TIMESTAMP, MIN_TIMESTAMP):
-            event_dt = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)
+            event_dt = datetime.utcnow().replace(tzinfo=timezone.utc)
         else:
             event_dt = timestamp.to_utc_datetime()   
 
@@ -179,7 +185,7 @@ class WriteToBigtable(beam.DoFn):
         bt_row.set_cell(
             self.column_family,
             b"message",
-            element.encode(),
+            json.dumps(element).encode(),
             timestamp=event_dt # Datatime
         )
         bt_row.commit()
