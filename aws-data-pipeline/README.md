@@ -1,4 +1,4 @@
-# About
+# AWS Data pipeline
 
 This project implements a real-time data pipeline using AWS services to simulate and process IoT sensor data. The architecture consists of an EC2 instance for data generation, Amazon Kinesis for streaming ingestion, AWS Lambda for data transformation, and DynamoDB for scalable storage. The pipeline is fully automated using Terraform, enabling repeatable infrastructure setup and teardown. This setup is designed for benchmarking performance, cost, and sustainability in cloud-native stream processing.
 
