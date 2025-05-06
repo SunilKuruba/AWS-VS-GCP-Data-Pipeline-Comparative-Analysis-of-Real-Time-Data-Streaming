@@ -13,7 +13,7 @@ sudo pip3 install boto3 requests
 
 # Run data source script
 git clone https://github.com/SunilKuruba/aws-vs-gcp-data-pipeline.git
-cd  aws-vs-gcp-data-pipeline/aws-data-pipeline/terraform
+cd  aws-vs-gcp-data-pipeline/aws-data-pipeline
 python3 data_source.py
 
 EOF
