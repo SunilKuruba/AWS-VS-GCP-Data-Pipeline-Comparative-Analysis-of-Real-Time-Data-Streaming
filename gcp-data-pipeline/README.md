@@ -107,7 +107,7 @@ The above 2 scripts will start the whole pipeline and log the data into their re
      terraform init
      terraform validate
      terraform plan -var="create_kafka_cluster=false" -out=tfplan.out
-     terraform apply tfplan.out -auto-approve
+     terraform apply -auto-approve tfplan.out
      ```
 4. ** To destroy the PipeLine**
      ```
