@@ -43,10 +43,6 @@ def run():
     std_options = options.view_as(StandardOptions)
     std_options.streaming = True
     
-    # For Kafka IO, we need to define a function to extract the message value
-    def extract_message(kafka_record):
-        return kafka_record.value.decode('utf-8')
-    
     # Create and run the pipeline
     with beam.Pipeline(options=options) as pipeline:
         messages = (
@@ -137,16 +133,7 @@ class ReadKafkaMessages(beam.DoFn):
             formatted_data[key] = value
         
         # adding kafka and beam time stamps
-        # dt = datetime.fromtimestamp(kafka_timestamp_ms / 1000, tz=timezone.utc)
-        # formatted_data['kafka_timestamp'] = dt.strftime("%Y-%m-%dT%H:%M:%SZ")
-        # current_time = time.gmtime()
-        # formatted_time = time.strftime("%Y-%m-%dT%H:%M:%SZ", current_time)
-        # formatted_data['beam_timestamp'] = formatted_time
-
-        # a) from Kafka: msg.timestamp()[1] is **milliseconds since epoch**
         formatted_data['kafka_timestamp'] = kafka_timestamp_ms
-
-        # b) “Beam produce time”: just take current clock in seconds
         formatted_data['beam_timestamp'] = int(time.time_ns())//1_000_000
 
         return formatted_data
