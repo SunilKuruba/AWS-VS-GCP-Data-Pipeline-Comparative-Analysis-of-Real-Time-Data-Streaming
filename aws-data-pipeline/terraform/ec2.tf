@@ -7,19 +7,17 @@ resource "aws_instance" "iot_data_source" {
 #!/bin/bash
 # Install dependencies
 sudo yum update -y
+sudo yum install git -y
 sudo yum install -y python3-pip -y
 sudo pip3 install boto3 requests
 
-# Write data_source.py into EC2
-cat <<EOPY > /home/ec2-user/data_source.py
-${file("${path.module}/data_source.py")}
-EOPY
+# Run data source script
+git clone https://github.com/SunilKuruba/aws-vs-gcp-data-pipeline.git
+cd  aws-vs-gcp-data-pipeline/aws-data-pipeline
+python3 data_source.py
 
-# Set permissions and run
-chmod +x /home/ec2-user/data_source.py
-python3 /home/ec2-user/data_source.py
 EOF
-  vpc_security_group_ids = [aws_security_group.allow_https_only.id]
+  vpc_security_group_ids = [aws_security_group.allow_ssh_and_https.id]
 
   tags = {
     Name = "iot-data-source-ec2"

@@ -62,7 +62,6 @@ def lambda_handler(event, context):
             mapped_payload['kinesis_timestamp'] = datetime.fromtimestamp(
                 record['kinesis']['approximateArrivalTimestamp'], timezone.utc
             ).isoformat()
-            mapped_payload['dynamodb_timestamp'] = datetime.utcnow().isoformat() + "Z"
 
             # Write the record to DynamoDB
             table.put_item(Item=mapped_payload)
