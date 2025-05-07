@@ -1,5 +1,6 @@
 resource "google_bigtable_instance" "bt_instance" {
   name          = var.bt_instance_id
+  deletion_protection=false
 
   cluster {
     cluster_id   = "${var.bt_instance_id}-cluster"
@@ -15,7 +16,7 @@ resource "google_bigtable_instance" "bt_instance" {
 
 resource "google_bigtable_table" "bt_table" {
   name          = var.bt_table_id
-  deletion_protection = false
+  deletion_protection = "UNPROTECTED"
   instance_name = google_bigtable_instance.bt_instance.name
 
   column_family {

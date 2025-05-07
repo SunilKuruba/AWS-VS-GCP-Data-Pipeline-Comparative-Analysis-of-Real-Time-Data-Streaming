@@ -3,6 +3,34 @@
 
 This project builds a real-time data processing pipeline on **Google Cloud Platform (GCP)** using **Managed Kafka**, **Apache Beam**, and **Bigtable**. It simulates ingestion of weather-related IoT data, publishes it to a Kafka topic, processes the data using Apache Beam, and optionally stores the enriched results in Bigtable.
 
+
+<!-- <img width="669" alt="image" src="https://github.com/user-attachments/assets/4048d3d1-00d4-42c7-91a4-8d24f54c07f0" /> -->
+
+<!-- <img width="669" alt="image" src="https://github.com/user-attachments/assets/12909296-0cc1-4670-bac8-548cb45c4973" /> -->
+
+![image](https://github.com/user-attachments/assets/790c6adb-131a-4214-8321-41ce0f5cb40f)
+
+---
+
+## Project Structure
+
+```bash
+gcp-data-pipeline/
+├── terraform/                    # Terraform scripts to automate GCP infra setup
+│   ├── bigtable.tf               # Creates Bigtable instance, table, and column family
+│   ├── compute_engine.tf         # Creates a new VM instance
+│   ├── iam.tf                    # IAM roles and bindings
+│   ├── main.tf                   # Terraform entry point
+│   ├── managed_kafka.tf          # Managed Kafka cluster and topic creation
+│   ├── variables.tf              # Input variables used across Terraform configs
+│   ├── versions.tf               # Provider and Terraform version constraints
+├── beam_processing.py            # Apache Beam consumer pipeline
+├── data_ingestion.py             # Kafka event producer
+└── README.md                     # Documentation (this file)
+```
+
+# GCP Resources Summary
+=======
 ### GCP Resources Summary
 
 This table outlines the Google Cloud resources declared in Terraform and how they support each stage of the pipeline (Ingest → Process → Store).
@@ -16,11 +44,6 @@ This table outlines the Google Cloud resources declared in Terraform and how the
 | **Beam** | *(Beam job launched from VM)* | — | Apache Beam (Dataflow runner). Job is triggered by `beam_processing.py` on the VM. Transforms Kafka messages. |
 | **Bigtable** | `google_bigtable_instance` | `bt_instance` | Single-node, HDD storage, `zone = var.zone`, `environment = prod`. |
 | | `google_bigtable_table` | `bt_table` | Column family `cf1`, `deletion_protection = false`. Table resides in the Bigtable instance and stores processed data. |
-
-
-<!-- <img width="669" alt="image" src="https://github.com/user-attachments/assets/4048d3d1-00d4-42c7-91a4-8d24f54c07f0" /> -->
-
-<img width="669" alt="image" src="https://github.com/user-attachments/assets/12909296-0cc1-4670-bac8-548cb45c4973" />
 
 
 
@@ -80,12 +103,13 @@ The above 2 scripts will start the whole pipeline and log the data into their re
      ```
      cd terraform
      terraform init
-     terraform plan -out=tfplan.out
-     terraform apply tfplan.out
+     terraform validate
+     terraform plan -var="create_kafka_cluster=false" -out=tfplan.out
+     terraform apply -auto-approve tfplan.out
      ```
 4. ** To destroy the PipeLine**
      ```
-     terraform destroy
+     terraform destroy -auto-approve
      ```
 
 

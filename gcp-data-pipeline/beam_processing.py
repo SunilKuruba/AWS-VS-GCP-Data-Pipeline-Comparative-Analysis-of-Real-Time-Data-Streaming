@@ -43,10 +43,6 @@ def run():
     std_options = options.view_as(StandardOptions)
     std_options.streaming = True
     
-    # For Kafka IO, we need to define a function to extract the message value
-    def extract_message(kafka_record):
-        return kafka_record.value.decode('utf-8')
-    
     # Create and run the pipeline
     with beam.Pipeline(options=options) as pipeline:
         messages = (
@@ -61,11 +57,11 @@ def run():
             | 'LogMessages' >> beam.Map(
                 lambda msg: (print(f"Received message: {msg}") or msg)
             )
-            # | 'WriteToBigtable' >> beam.ParDo(WriteToBigtable(
-            #     project_id=args.project_id,
-            #     instance_id=args.instance_id,
-            #     table_id=args.table_id
-            # ))
+            | 'WriteToBigtable' >> beam.ParDo(WriteToBigtable(
+                project_id=args.project_id,
+                instance_id=args.instance_id,
+                table_id=args.table_id
+            ))
         )
 
 # Custom DoFn for Kafka reading
@@ -77,7 +73,7 @@ class ReadKafkaMessages(beam.DoFn):
         self.token_provider_class = token_provider_class
     
     def setup(self):
-        # Import here to avoid serialization issues
+        # Importing here to avoid serialization issues
         from confluent_kafka import Consumer, KafkaError
         
         # Create token provider inside setup
@@ -103,16 +99,14 @@ class ReadKafkaMessages(beam.DoFn):
         self.logger.info(f"Kafka consumer set up for topic: {self.topic}")
     
     def process(self, element):
-        # Poll for messages
         try:
             while True:
                 msg = self.consumer.poll(timeout=25.0)
                 print(msg)
-                break
 
                 if msg is None:
                     self.logger.info("No message received, continuing...")
-                    continue
+                    break
                 
                 if msg.error():
                     if msg.error().code() == KafkaError._PARTITION_EOF:
@@ -131,7 +125,7 @@ class ReadKafkaMessages(beam.DoFn):
         except Exception as e:
             self.logger.error(f"Error processing Kafka messages: {e}")
 
-    def process_helper(self, records, kafka_timestamp):
+    def process_helper(self, records, kafka_timestamp_ms):
         formatted_data = {} 
 
         for (field, value) in records.items():
@@ -139,11 +133,8 @@ class ReadKafkaMessages(beam.DoFn):
             formatted_data[key] = value
         
         # adding kafka and beam time stamps
-        dt = datetime.fromtimestamp(kafka_timestamp / 1000, tz=timezone.utc)
-        formatted_data['kafka_timestamp'] = dt.strftime("%Y-%m-%dT%H:%M:%SZ")
-        current_time = time.gmtime()
-        formatted_time = time.strftime("%Y-%m-%dT%H:%M:%SZ", current_time)
-        formatted_data['beam_timestamp'] = formatted_time
+        formatted_data['kafka_timestamp'] = kafka_timestamp_ms
+        formatted_data['beam_timestamp'] = int(time.time_ns())//1_000_000
 
         return formatted_data
     
@@ -160,27 +151,23 @@ class WriteToBigtable(beam.DoFn):
         self.table_id = table_id
         self.column_family = column_family
 
-    # ---------- Beam lifecycle ----------
     def setup(self):
         self.client   = bigtable.Client(project=self.project_id, admin=True)
         self.instance = self.client.instance(self.instance_id)
         self.table    = self.instance.table(self.table_id)
 
     def process(self, element, timestamp=beam.DoFn.TimestampParam):
-        # ----- choose a safe datetime -----
         if timestamp in (MAX_TIMESTAMP, MIN_TIMESTAMP):
-            event_dt = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)
+            event_dt = datetime.utcnow().replace(tzinfo=timezone.utc)
         else:
             event_dt = timestamp.to_utc_datetime()   
-
-        # ----- write the row --------------
         row_key = uuid.uuid4().bytes
         bt_row  = self.table.direct_row(row_key)
 
         bt_row.set_cell(
             self.column_family,
             b"message",
-            element.encode(),
+            json.dumps(element).encode(),
             timestamp=event_dt # Datatime
         )
         bt_row.commit()

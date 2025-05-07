@@ -2,6 +2,7 @@ resource "google_compute_instance" "vm" {
   name         = var.vm_name
   machine_type = var.machine_type
   zone         = var.zone
+  deletion_protection = false
 
   boot_disk {
     initialize_params {
@@ -40,11 +41,17 @@ resource "google_compute_instance" "vm" {
     git checkout gcp
     cd gcp-data-pipeline
 
+    touch /var/log/publisher.log
+    sudo chmod 666 /var/log/publisher.log
+    touch /var/log/beam.log
+    sudo chmod 666 /var/log/beam.log
+
+
     # Launch publisher.py
     nohup /opt/venv/bin/python data_ingestion.py \
       --bootstrap-servers=${var.bootstrap_server} \
       --topic-name=${var.kafka_topic} \
-      --num_messages=2 \
+      --num_messages=100 \
       --delay=5 >/var/log/publisher.log 2>&1 &
 
     # Launch beam_processing.py

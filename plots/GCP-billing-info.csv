@@ -1,0 +1,9 @@
+Service description,Service ID,Cost ($),Discounts ($),Promotions and others ($),Unrounded subtotal ($),Subtotal ($),Percent change in subtotal compared to previous period
+Dataplex,51C6-B3F5-9B38,-0.00,0.00,0.00,0.000000,0.00,0%
+Compute Engine,6F81-5844-456A,31.90,0.00,-31.90,0.000000,0.00,0%
+Managed Service for Apache Kafka,9544-7B1C-811D,95.11,0.00,-95.11,0.000000,0.00,0%
+Cloud Bigtable,C3BE-24A5-0975,62.43,0.00,-62.43,0.000000,0.00,0%
+Networking,E505-1604-58F8,12.54,-12.54,-0.00,0.000000,0.00,0%
+Cloud DNS,FA26-5236-B8B5,0.08,0.00,-0.08,0.000000,0.00,0%
+,,,,Subtotal,0.000000,0.00
+,,,,Invoice total,0.000000,0.00
