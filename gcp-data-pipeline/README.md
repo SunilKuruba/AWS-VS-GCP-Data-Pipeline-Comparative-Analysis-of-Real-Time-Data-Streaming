@@ -3,25 +3,19 @@
 
 This project builds a real-time data processing pipeline on **Google Cloud Platform (GCP)** using **Managed Kafka**, **Apache Beam**, and **Bigtable**. It simulates ingestion of weather-related IoT data, publishes it to a Kafka topic, processes the data using Apache Beam, and optionally stores the enriched results in Bigtable.
 
----
+### GCP Resources Summary
 
-## Project Structure
+This table outlines the Google Cloud resources declared in Terraform and how they support each stage of the pipeline (Ingest → Process → Store).
 
-```bash
-gcp-data-pipeline/
-├── terraform/                    # Terraform scripts to automate GCP infra setup
-│   ├── bigtable.tf               # Creates Bigtable instance, table, and column family
-│   ├── compute_engine.tf         # Creates a new VM instance
-│   ├── iam.tf                    # IAM roles and bindings
-│   ├── main.tf                   # Terraform entry point
-│   ├── managed_kafka.tf          # Managed Kafka cluster and topic creation
-│   ├── variables.tf              # Input variables used across Terraform configs
-│   ├── versions.tf               # Provider and Terraform version constraints
-├── beam_processing.py            # Apache Beam consumer pipeline
-├── data_ingestion.py             # Kafka event producer
-└── README.md                     # Documentation (this file)
-```
-
+| Category | Resource Type | Name (Terraform) | Key Specifications / Purpose |
+|----------|-------------------------------|------------------|------------------------------|
+| **IAM** | `google_project_iam_member` | `compute_sa_managedkafka` | Grants `roles/managedkafka.client` to the default Compute Engine service account so the VM can interact with Managed Kafka. |
+| **Compute VM ** | `google_compute_instance` | `vm` | Debian 12, `machine_type = var.machine_type`, subnet = `var.subnet_self_link`, external IP enabled. Startup script installs Python, clones the repo, and runs `data_ingestion.py` and `beam_processing.py`. |
+| **Kafka** | `google_managed_kafka_cluster` | `kafka` | 4 vCPUs, 8 GiB RAM, region = `var.region`, subnet = `var.subnet_self_link`. |
+| | `google_managed_kafka_topic` | `iot_topic` | Partitions = 1, Replication factor = 3. Used to transport IoT data from the VM to the processing step. |
+| **Beam** | *(Beam job launched from VM)* | — | Apache Beam (Dataflow runner). Job is triggered by `beam_processing.py` on the VM. Transforms Kafka messages. |
+| **Bigtable** | `google_bigtable_instance` | `bt_instance` | Single-node, HDD storage, `zone = var.zone`, `environment = prod`. |
+| | `google_bigtable_table` | `bt_table` | Column family `cf1`, `deletion_protection = false`. Table resides in the Bigtable instance and stores processed data. |
 
 
 <!-- <img width="669" alt="image" src="https://github.com/user-attachments/assets/4048d3d1-00d4-42c7-91a4-8d24f54c07f0" /> -->
