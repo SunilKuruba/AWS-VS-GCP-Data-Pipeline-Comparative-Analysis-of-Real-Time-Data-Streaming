@@ -3,6 +3,14 @@
 
 This project builds a real-time data processing pipeline on **Google Cloud Platform (GCP)** using **Managed Kafka**, **Apache Beam**, and **Bigtable**. It simulates ingestion of weather-related IoT data, publishes it to a Kafka topic, processes the data using Apache Beam, and optionally stores the enriched results in Bigtable.
 
+
+
+<!-- <img width="669" alt="image" src="https://github.com/user-attachments/assets/4048d3d1-00d4-42c7-91a4-8d24f54c07f0" /> -->
+
+<!-- <img width="669" alt="image" src="https://github.com/user-attachments/assets/12909296-0cc1-4670-bac8-548cb45c4973" /> -->
+
+![image](https://github.com/user-attachments/assets/790c6adb-131a-4214-8321-41ce0f5cb40f)
+
 ---
 
 ## Project Structure
@@ -21,14 +29,6 @@ gcp-data-pipeline/
 ├── data_ingestion.py             # Kafka event producer
 └── README.md                     # Documentation (this file)
 ```
-
-
-
-<!-- <img width="669" alt="image" src="https://github.com/user-attachments/assets/4048d3d1-00d4-42c7-91a4-8d24f54c07f0" /> -->
-
-<!-- <img width="669" alt="image" src="https://github.com/user-attachments/assets/12909296-0cc1-4670-bac8-548cb45c4973" /> -->
-
-![image](https://github.com/user-attachments/assets/790c6adb-131a-4214-8321-41ce0f5cb40f)
 
 # GCP Resources Summary
 
