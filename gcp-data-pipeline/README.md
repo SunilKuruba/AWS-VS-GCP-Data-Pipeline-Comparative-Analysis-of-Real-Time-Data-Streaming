@@ -26,7 +26,26 @@ gcp-data-pipeline/
 
 <!-- <img width="669" alt="image" src="https://github.com/user-attachments/assets/4048d3d1-00d4-42c7-91a4-8d24f54c07f0" /> -->
 
-<img width="669" alt="image" src="https://github.com/user-attachments/assets/12909296-0cc1-4670-bac8-548cb45c4973" />
+<!-- <img width="669" alt="image" src="https://github.com/user-attachments/assets/12909296-0cc1-4670-bac8-548cb45c4973" /> -->
+
+![image](https://github.com/user-attachments/assets/790c6adb-131a-4214-8321-41ce0f5cb40f)
+
+# GCP Resources Summary
+
+This table outlines the GCP resources created using Terraform.
+
+| **Category** | **Resource Type** | **Name** | **Key Specifications** |
+|--------------|-------------------|----------|--------------------------|
+| **IAM** | `google_project_iam_member` | `compute_sa_managedkafka` | Grants `roles/managedkafka.client` to the default Compute Engine service account (`735481339104-compute@developer.gserviceaccount.com`) |
+| **Compute Engine** | `google_compute_instance` | `pipeline-vm` | Image: Debian 12, Type: `e2-medium`, Zone: `us-central1-f`, Startup script runs Kafka producer and Beam consumer |
+| **Managed Kafka** | `google_managed_kafka_cluster` | `data-ingestion` | vCPU: 4, RAM: 8 GB, Region: `us-central1`, Subnet: `default`, Conditional via `create_kafka_cluster` variable |
+| | `google_managed_kafka_topic` | `iot-data` | Partitions: 1, Replication Factor: 3, Linked to `data-ingestion` cluster |
+| **Bigtable** | `google_bigtable_instance` | `iot-data-store` | Cluster: `iot-data-store-cluster`, Zone: `us-central1-f`, Nodes: 1, Storage: HDD, Labels: `{ environment = "prod" }` |
+| | `google_bigtable_table` | `weather-info` | Column Family: `cf1`, Deletion Protection: UNPROTECTED |
+| **Terraform Providers** | `provider "google"` / `google-beta` | — | Project: `cool-continuity-457614-b2`, Region: `us-central1`, Zone: `us-central1-f` |
+| **Startup Script** | (within `google_compute_instance`) | — | Installs Kafka, Apache Beam, and Bigtable SDK; clones repo and launches `data_ingestion.py` and `beam_processing.py` as background jobs |
+
+
 
 
 
