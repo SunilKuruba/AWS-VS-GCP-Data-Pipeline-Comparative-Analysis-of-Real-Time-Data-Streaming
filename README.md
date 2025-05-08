@@ -1,4 +1,4 @@
-# Comparative Analysis of Real‑Time Streaming Pipelines on AWS & GCP  
+# Comparative Analysis of Real‑Time Streaming Pipelines on AWS & GCP
 
 ## Introduction
 
