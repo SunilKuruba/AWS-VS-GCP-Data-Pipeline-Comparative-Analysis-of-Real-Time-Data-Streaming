@@ -9,7 +9,7 @@ Real‑time decision‑making has become a competitive necessity as billions of 
 * **Performance Pressure** Fraud detection, predictive maintenance, and smart‑city monitoring require sub‑second analytics.
 * **Cost Awareness** Cloud pricing can spike with always‑on streams; architects need clear \$‑per‑event economics.
 * **Sustainability Goals** Enterprises face ESG mandates and must quantify the carbon impact of their workloads.
-* **Holistic View** Most prior work benchmarks isolated components; real systems demand end‑to‑end evaluations.
+* **Holistic View** Most prior work benchmarks isolated components; real systems demand end‑to‑end evaluations. 
 
 ## Features
 
